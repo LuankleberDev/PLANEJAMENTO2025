@@ -15,39 +15,53 @@ function renderTable(tableId, data) {
   const thead = table.querySelector('thead');
   const tbody = table.querySelector('tbody');
 
-  const colunasOcultas = data.headers
-    .map((h, i) => h.toLowerCase().includes("ok") ? i : -1)
-    .filter(i => i !== -1);
+  // Colunas que não devem aparecer na tabela de calibragens
+  const isCalibragem = tableId.includes("calibragem");
+  const colunasOcultas = isCalibragem ? ["Oficina", "Preventivas"] : [];
 
+  // Índices das colunas visíveis
   const colunasVisiveis = data.headers
-    .map((_, i) => i)
-    .filter(i => !colunasOcultas.includes(i));
+    .map((header, index) => colunasOcultas.includes(header) ? null : index)
+    .filter(index => index !== null);
 
+  // Cabeçalho
   thead.innerHTML = '<tr>' +
     colunasVisiveis.map(i => `<th>${data.headers[i]}</th>`).join('') +
     '</tr>';
 
+  // Corpo da tabela
   tbody.innerHTML = data.rows.map(row => {
     return `<tr>${colunasVisiveis.map(idx => {
-      const header = data.headers[idx].toLowerCase();
-      const valor = row[idx];
-      let bgColor = "";
+      const header = data.headers[idx];
+      const cell = row[idx];
 
-      // FEITO ?
-      if (header.startsWith("feito")) {
-        const feito = valor?.toString().toUpperCase() === "SIM";
+      // Trata a coluna "Feito ?"
+      if (header.toLowerCase().startsWith("feito")) {
+        const feito = cell?.toString().toUpperCase() === "SIM";
         if (feito) return `<td style="text-align: center;">✅</td>`;
 
+        // Identifica a data de vencimento
         const vencimentoIndex = data.headers.findIndex(h =>
           h.toLowerCase().includes("preventiva") ||
           h.toLowerCase().includes("inspeção") ||
           h.toLowerCase().includes("programada") ||
-          h.toLowerCase().includes("programação")
+          h.toLowerCase().includes("programação") // ✅ adicionado
         );
         const vencimentoRaw = row[vencimentoIndex];
         if (!vencimentoRaw) return `<td style="text-align: center;"></td>`;
 
-        let vencimentoDate = new Date(vencimentoRaw);
+        let vencimentoDate = null;
+
+        if (typeof vencimentoRaw === "string" && /^Date\(/.test(vencimentoRaw)) {
+          const match = vencimentoRaw.match(/Date\((\d+),(\d+),(\d+)\)/);
+          if (match) {
+            const [, year, month, day] = match.map(Number);
+            vencimentoDate = new Date(year, month, day);
+          }
+        } else {
+          vencimentoDate = new Date(vencimentoRaw);
+        }
+
         if (!isNaN(vencimentoDate)) {
           const hoje = new Date();
           hoje.setHours(0, 0, 0, 0);
@@ -66,28 +80,17 @@ function renderTable(tableId, data) {
         return `<td style="text-align: center;"></td>`;
       }
 
-      // CALIBRAGEM COM COLUNA OK
-      if (header.includes("calibragem") && !header.includes("ok")) {
-        const num = header.charAt(0);
-        const okHeader = `${num}º ok`;
-        const okIdx = data.headers.findIndex(h => h.toLowerCase().trim() === okHeader);
-        const okValor = row[okIdx]?.toString().toUpperCase().trim();
-        if (okValor === "OK") {
-          bgColor = ' style="background-color: #e6ffe6"';
-        }
-      }
-
-      // Formatar datas estilo Date(...)
-      if (typeof valor === "string" && /^Date\(/.test(valor)) {
-        const match = valor.match(/Date\((\d+),(\d+),(\d+)\)/);
+      // Formata células Date(...) como dd/mm/aaaa
+      if (typeof cell === "string" && /^Date\(/.test(cell)) {
+        const match = cell.match(/Date\((\d+),(\d+),(\d+)\)/);
         if (match) {
           const [, year, month, day] = match.map(Number);
           const date = new Date(year, month, day);
-          return `<td${bgColor}>${formatarData(date)}</td>`;
+          return `<td>${formatarData(date)}</td>`;
         }
       }
 
-      return `<td${bgColor}>${valor}</td>`;
+      return `<td>${cell}</td>`;
     }).join('')}</tr>`;
   }).join('');
 }
@@ -120,6 +123,7 @@ function showTab(tabName) {
   }
 }
 
+// Filtro inteligente por transportadora ou placa
 function filterByTransportadora() {
   const input = document.getElementById("transportadoraInput").value.toLowerCase();
 

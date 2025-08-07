@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Planejamento de Preventivas</title>
+  <link rel="stylesheet" href="acpp.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="left">
+      <img src="suzano-papel-e-celulose-logo-png_seeklogo-412694.png" alt="Logo Suzano" class="logo">
+    </div>
+    <div class="right">
+      <h1 class="page-title">Planejamento de Carretas</h1>
+    </div>
+  </header>
+
+  <!-- Botões de abas -->
+  <div class="tab-buttons">
+    <button onclick="showTab('preventivaTab')" class="active">Preventivas</button>
+    <button onclick="showTab('calibragemTab')">Calibragens</button>
+    <button onclick="showTab('inspecaoTab')">Inspeção Eletromecânica</button>
+  </div>
+
+  <!-- Filtro -->
+  <div id="filtro">
+    <input type="text" id="transportadoraInput" placeholder="Digite a transportadora ou placa..." oninput="filterByTransportadora()" />
+  </div>
+
+  <!-- Abas -->
+  <div id="preventivaTab" class="tab-content">
+    <table id="preventivaTable">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="calibragemTab" class="tab-content" style="display: none;">
+    <table id="calibragemTable">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="inspecaoTab" class="tab-content" style="display: none;">
+    <table id="inspecaoTable">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Script principal -->
+  <script src="acpp.js"></script>
+</body>
+</html>
